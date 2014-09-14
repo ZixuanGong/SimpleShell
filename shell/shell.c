@@ -64,6 +64,22 @@ void read_and_parse_input(){
 	cmd = cmdArgv[0];
 }
 
+int check_existence( char *string){
+	for(i = 0; i < path_num; i++){
+		if( !strcmp(path[i], string) )
+			return i;
+	}
+	return -1;
+
+}
+
+void print_error( char *msg){
+	if( msg == NULL )
+		printf("error: %s\n", strerror(errno));
+	else
+		printf("error: %s\n", msg);
+}
+
 void manage_path() {
 
 	dir = cmdArgv[2];
@@ -78,52 +94,66 @@ void manage_path() {
 		printf("\n");
 
 	//path + dir
-	} else if(!strcmp(cmdArgv[1], "+")){
-		//reallocate memory
-		if(path_num >= path_size){
-			char ** bigger_path = realloc( path, path_size + OFFSET);
-			if(bigger_path == NULL){}
+	} else {
+		if( dir == NULL ){
+			print_error("Plz enter a directory!");
+			return;
+		}
+
+		if(!strcmp(cmdArgv[1], "+")){
+			if( check_existence(dir) >= 0){
+				print_error("Path already exists!");
+				return;
+			}
+
+			//reallocate memory
+			if(path_num >= path_size){
+				char ** bigger_path = realloc( path, path_size + OFFSET);
+				if(bigger_path == NULL){}
+					//error
+				else{
+					path = bigger_path;
+
+					for(i = path_size; i < path_size + OFFSET; i++){
+						path[i] = malloc( single_path_len * sizeof(char));
+					}
+					path_size += OFFSET;
+				}
+			}
+
+			//add to path
+			if(dir == NULL){}
 				//error
 			else{
-				path = bigger_path;
-
-				for(i = path_size; i < path_size + OFFSET; i++){
-					path[i] = malloc( single_path_len * sizeof(char));
-				}
-				path_size += OFFSET;
+				strcpy(path[path_num], dir);
+				path_num++;
 			}
+
+		//path - dir
+		} else if(!strcmp(cmdArgv[1], "-")){
+
+			if(path_num == 0){
+				print_error("The path is empty!");
+				return;
+			}
+
+			int pos = check_existence(dir);
+
+			if( pos == -1 ){
+				print_error("No such directory in the path!");
+				return;
+			}
+
+			if( path_num == 1 ){
+				path[0] = NULL;
+			} else {
+				
+				path[pos] = path[path_num - 1];
+				path[path_num - 1] = NULL;
+			}
+			path_num--;
+			
 		}
-
-		//add to path
-		if(dir == NULL){}
-			//error
-		else{
-			strcpy(path[path_num], dir);
-			path_num++;
-		}
-
-	//path - dir
-	} else if(!strcmp(cmdArgv[1], "-")){
-		//no such dir
-
-		// char *pathv[]
-
-		// //split path into array
-		// token = strtok(path, ":");
-		// if(token == NULL) //no colon - no dir or 1 dir
-		// 	cmdArgv[0] = line;
-
-		// while(token != NULL){
-		// 	cmdArgv[cmdArgc] = token;
-		// 	token = strtok(NULL, " ");
-		// 	cmdArgc++;
-		// }
-		// if(!strstr(path, dir)){
-		// 	printf("error: %s\n", strerror(errno));
-		// }
-		// else {
-
-		// }
 	}
 }
 
