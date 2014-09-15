@@ -6,194 +6,179 @@
 #define TRUE 1
 #define OFFSET 10
 
-// char *command[] = {"cd","exit"};
-
 char **path;
-int path_num = 0;
-int path_size = 10;
-int i = 0;
-int single_path_len =30;
-char line[256]; //user input
-char *token;
+size_t path_num = 0;
+size_t path_size = 10;
+size_t single_path_len =30;
+
+char **cmdArgv;
+size_t cmdArgc = 0;
+size_t cmdArgSize = 10;
+
 int status = -1;
-char *cmdArgv[5]={NULL, NULL, NULL, NULL, NULL};
-int cmdArgc = 0;
-char *cmd = NULL;
-char *dir = NULL;
 
-void type_prompt(){
-	printf("$ ");
-}
-void init(){
-	errno = 0; 
-	path = malloc( path_size * sizeof(char*) );
-	for(i = 0; i < path_size; i++){
-		path[i] = malloc( single_path_len * sizeof(char));
-	}
-	strcpy(path[0], "/bin");
-	path_num++;
-}
-
-void reset_for_loop(){
-	for(i=0; i<5; i++){
-		cmdArgv[i] = NULL;
-	}
-
-	cmdArgc = 0;
-	cmd = NULL;
-	dir = NULL;
-}
-
-void read_and_parse_input(){
-	fgets(line, sizeof(line), stdin);
-	//cancel the last \n
-	char *tail = NULL;
-	if((tail = strchr(line, '\n')) != NULL)
-		*tail = '\0';
-
-	//split line
-	token = strtok(line, " ");
-	if(token == NULL) //no white space
-		cmdArgv[0] = line;
-
-	while(token != NULL){
-		cmdArgv[cmdArgc] = token;
-		token = strtok(NULL, " ");
-		cmdArgc++;
-	}
-	cmd = cmdArgv[0];
-}
-
-int check_existence( char *string){
-	for(i = 0; i < path_num; i++){
-		if( !strcmp(path[i], string) )
-			return i;
-	}
-	return -1;
-
-}
-
-void print_error( char *msg){
+void print_error(char *msg)
+{
 	if( msg == NULL )
 		printf("error: %s\n", strerror(errno));
 	else
 		printf("error: %s\n", msg);
 }
 
-void manage_path() {
+void init()
+{
+	errno = 0;
 
-	dir = cmdArgv[2];
+	path = malloc(path_size * sizeof(char*));
+	int i;
+	for (i = 0; i < path_size; i++)
+		path[i] = malloc(single_path_len * sizeof(char));
+	strcpy(path[0], "/bin");
+	path_num++;
 
-	//null pointer, print path
-	if(!cmdArgv[1]) {
-		printf("%s", path[0]);
+}
 
-		for(i = 1; i < path_num; i++){
-			printf(":%s", path[i]);
-		}
-		printf("\n");
-
-	//path + dir
-	} else {
-		if( dir == NULL ){
-			print_error("Plz enter a directory!");
-			return;
-		}
-
-		if(!strcmp(cmdArgv[1], "+")){
-			if( check_existence(dir) >= 0){
-				print_error("Path already exists!");
-				return;
-			}
-
-			//reallocate memory
-			if(path_num >= path_size){
-				char ** bigger_path = realloc( path, path_size + OFFSET);
-				if(bigger_path == NULL){}
-					//error
-				else{
-					path = bigger_path;
-
-					for(i = path_size; i < path_size + OFFSET; i++){
-						path[i] = malloc( single_path_len * sizeof(char));
-					}
-					path_size += OFFSET;
-				}
-			}
-
-			//add to path
-			if(dir == NULL){}
-				//error
-			else{
-				strcpy(path[path_num], dir);
-				path_num++;
-			}
-
-		//path - dir
-		} else if(!strcmp(cmdArgv[1], "-")){
-
-			if(path_num == 0){
-				print_error("The path is empty!");
-				return;
-			}
-
-			int pos = check_existence(dir);
-
-			if( pos == -1 ){
-				print_error("No such directory in the path!");
-				return;
-			}
-
-			if( path_num == 1 ){
-				path[0] = NULL;
-			} else {
-				
-				path[pos] = path[path_num - 1];
-				path[path_num - 1] = NULL;
-			}
-			path_num--;
-			
-		}
+void read_and_parse_input(){
+	char *line;
+	size_t n = 128;
+	if (getline(&line, &n, stdin) == -1) {
+		print_error("Error in getline()");
+		return;
+	}
+	/* cancel the last \n */
+	char *tail = NULL;
+	if ((tail = strchr(line, '\n')) != NULL)
+		*tail = '\0';
+	/* split input */
+	char *token = strtok(line, " ");
+	while (token != NULL && cmdArgc <= 10) {
+		cmdArgv[cmdArgc] = token;
+		token = strtok(NULL, " ");
+		cmdArgc++;
 	}
 }
 
-int main(int argc, char **argv) {
-	// char *command[]={"exit"};
-	
+int find_position(char **array, size_t num, char *string)
+{
+	int i;
+	for (i = 0; i < num; i++) {
+		if (!strcmp(array[i], string))
+			return i;
+	}
+	return -1;
+}
+
+
+void enlarge_path_size()
+{
+	char **bigger_path = realloc(path, path_size + OFFSET);
+	if (bigger_path == NULL) {
+		print_error("Error in enlarge_path_size()");
+	}
+	else {
+		path = bigger_path;
+		int i;
+		for (i = path_size; i < path_size + OFFSET; i++)
+			path[i] = malloc(single_path_len * sizeof(char));
+		path_size += OFFSET;
+	}
+}
+
+void manage_path()
+{
+	char *dir = cmdArgv[2];
+
+	/* path */
+	if (cmdArgc == 1) {
+		printf("%s", path[0]);
+		int i = 0;
+		for(i = 1; i < path_num; i++)
+			printf(":%s", path[i]);
+		printf("\n");
+	}
+	/* path + */ 
+	else if (strcmp(cmdArgv[1], "+") == 0 && dir != NULL) {
+		if (find_position(path, path_num, dir) >= 0) {
+			print_error("Directory already exists");
+			return;
+		}
+		if (path_num >= path_size) 
+			enlarge_path_size();
+		strcpy(path[path_num], dir);
+		path_num++;
+	}
+	/* path - */ 
+	else if (strcmp(cmdArgv[1], "-") == 0 && dir != NULL) {
+		if(path_num == 0){
+			print_error("The path is empty!");
+			return;
+		}
+
+		int pos = find_position(path, path_num, dir);
+
+		if (pos == -1) {
+			print_error("No such directory in the path!");
+			return;
+		}
+
+		if (path_num == 1) {
+			path[0] = NULL;
+		} else {
+			path[pos] = path[path_num - 1];
+			path[path_num - 1] = NULL;
+		}
+		path_num--;
+	} else {
+		print_error("Invalid command");
+	}
+}
+
+void change_directory(){
+
+}
+
+int main(int argc, char **argv)
+{
+	char *commands[] = {"cd", "exit", "path"};
+	cmdArgv = malloc(cmdArgSize * sizeof(char*));;
 	init();
 
 	while (TRUE) {
-		//revert cmdargv
-		reset_for_loop();
+		cmdArgc = 0;
+		int i;
+		for (i = 0; i < cmdArgSize; i++)
+			cmdArgv[i] = NULL;
 
-		type_prompt();
-
-		//read input
+		printf("$ ");
 		read_and_parse_input();
-		
-		//exit
-		if(!strcmp(cmd, "exit"))
+
+		switch (find_position(commands, sizeof(commands), cmdArgv[0])) {
+		case 0:
+			change_directory();
+			break;
+		case 1:
 			exit(0);
-
-		//path
-		else if(!strcmp(cmd, "path")){
+			break;
+		case 2:
 			manage_path();
+			break;
+		default:
+			break;
 		}
 
-		//ls
-		else if(strcmp(cmd, "ls") == 0){
-			printf("reach ls");
-			if(fork() != 0){
-				/* Parent */
-				wait(&status);
-				printf("\n");
+		// else if(strcmp(cmd, "ls") == 0){
+		// 	printf("reach ls");
+		// 	if(fork() != 0){
+		// 		/* Parent */
+		// 		wait(&status);
+		// 		printf("\n");
 
-			} else{
-				/* Child*/
-				// execv(file_name, cmdArgv);
-				exit(0);
-			}
-		}
+		// 	} else{
+		// 		/* Child*/
+		// 		// execv(file_name, cmdArgv);
+		// 		exit(0);
+		// 	}
+		// }
 
 		// printf("%d\n", t);
 		// printf("%s\n", cmd);
