@@ -62,7 +62,7 @@ int find_position(char **array, size_t num, char *string)
 {
 	int i;
 	for (i = 0; i < num; i++) {
-		if (!strcmp(array[i], string))
+		if (strcmp(array[i], string) == 0)
 			return i;
 	}
 	return -1;
@@ -137,6 +137,21 @@ void change_directory(){
 
 }
 
+void exec_command()
+{
+	char *file_name = malloc(128 * sizeof(char));
+	strcpy(file_name, "/bin/");
+	strcat(file_name, cmdArgv[0]);
+
+	if(fork() != 0){
+		wait(&status);
+
+	} else{
+		execv(file_name, cmdArgv);
+		exit(0);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	char *commands[] = {"cd", "exit", "path"};
@@ -151,8 +166,7 @@ int main(int argc, char **argv)
 
 		printf("$ ");
 		read_and_parse_input();
-
-		switch (find_position(commands, sizeof(commands), cmdArgv[0])) {
+		switch (find_position(commands, 3, cmdArgv[0])) {
 		case 0:
 			change_directory();
 			break;
@@ -163,6 +177,7 @@ int main(int argc, char **argv)
 			manage_path();
 			break;
 		default:
+			exec_command();
 			break;
 		}
 
