@@ -134,7 +134,10 @@ void manage_path()
 }
 
 void change_directory(){
-
+	char *file_name = malloc(128 * sizeof(char));
+	strcpy(file_name, cmdArgv[1]);
+	if (chdir(file_name) == -1)
+		print_error(NULL);
 }
 
 void exec_command()
@@ -180,34 +183,6 @@ int main(int argc, char **argv)
 			exec_command();
 			break;
 		}
-
-		// else if(strcmp(cmd, "ls") == 0){
-		// 	printf("reach ls");
-		// 	if(fork() != 0){
-		// 		/* Parent */
-		// 		wait(&status);
-		// 		printf("\n");
-
-		// 	} else{
-		// 		/* Child*/
-		// 		// execv(file_name, cmdArgv);
-		// 		exit(0);
-		// 	}
-		// }
-
-		// printf("%d\n", t);
-		// printf("%s\n", cmd);
-
-
-		// if(fork() != 0){
-		// 	/* Parent */
-		// 	waitpid(-1, &status, 0);
-
-		// } else{
-		// 	/* Child*/
-		// 	execve(cmd, params, 0);
-		// }
-	
 	}
 	return 0;
 }
