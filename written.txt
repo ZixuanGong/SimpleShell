@@ -2,9 +2,9 @@
 It’s what a virtual machine does. The host OS provides the illusion that the guest OS has a complete control over the hardware. When the guest kernel needs to perform some privileged operations(e.g. mode transfer), they are actually handled by host kernel. The host OS should also protect itself from bugs in the guest OS.
 
 2. Exercise 1.13
-Adoption > Portability > Security > Reliability > Performance
+Security > Reliability > Performance > Adoption > Portability
 The first 3 criteria are closely related to user experience. In my opinion, security is crucial, the lack of which may lead to huge losses. Then reliability should be guaranteed so that users seldom lose their work. Performance is one of the important elements that determines whether users will adopt a system. 
-For the future development of an OS, the designers should make decisions on adoption and portability at the very beginning. These decisions are difficult to modify once the system is mature, and they somewhat determine a system’s fate. As I’m using a Mac, I put portability after adoption, since OS X runs only on apple devices.
+For the future development of an OS, the designers should make decisions on adoption and portability at the very beginning. I think, these decisions are difficult to modify once the system is mature, and they somewhat determine a system’s fate. As I’m using a Mac, I put portability after adoption, since OS X runs only on apple devices.
 
 3. Exercise 3.1
 Yes. Enough memory is needed to allocate the copy of parent process, and the necessary kernel structures. Because anyhow resources are always limited, errors are inevitable.
@@ -19,9 +19,13 @@ It will eventually throw an error
 The child finishes, crashes, or is terminated 
 
 7. Exercise 3.7
-When I ran “exec ls”, I was logged out, and Ubuntu was asking me to log in. But according to Stack Overflow, what actually happened was that the terminal shut down. Because exec overrides the current process(shell) with ls program, so after ls is done, the terminal closes.
+After I ran “exec ls”, Ubuntu was asking me to log in again. What actually happened was that the terminal shut down. Because exec overrides the current process(shell) with ls program, so after ls is finished, the terminal closes.
 
 8. Exercise 3.8
-9
+In total 32 processes
 
-9. Exercesi 3.9
+9. Exercise 3.9
+There are 3 copies, x in the 1st child is 10, in the parent is 20, and in the 2nd child is 15
+
+10. Exercise 3.10
+program 1 prints 2 lines of 6, program 2 prints 1 line of 6
